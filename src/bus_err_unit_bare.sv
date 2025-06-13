@@ -147,9 +147,9 @@ module bus_err_unit_bare #(
     .pop_i     ( pop_err_fifo   )
   );
 
-  assign err_code_o = read_err_addr.err;
-  assign err_addr_o = read_err_addr.addr;
-  assign err_meta_o = read_err_addr.meta;
+  assign err_code_o = err_fifo_empty ? '0 : read_err_addr.err;
+  assign err_addr_o = err_fifo_empty ? '0 : read_err_addr.addr;
+  assign err_meta_o = err_fifo_empty ? '0 : read_err_addr.meta;
 
   assign err_fifo_overflow_o = bus_unit_full;
 
