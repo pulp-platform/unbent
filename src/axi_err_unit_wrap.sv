@@ -15,8 +15,8 @@ module axi_err_unit_wrap #(
   parameter bit          DropOldest        = 1'b0,
   parameter type axi_req_t = logic,
   parameter type axi_rsp_t = logic,
-  parameter type reg_req_t = logic,
-  parameter type reg_rsp_t = logic
+  parameter type apb_req_t = logic,
+  parameter type apb_rsp_t = logic
 ) (
   input  logic clk_i,
   input  logic rst_ni,
@@ -27,14 +27,14 @@ module axi_err_unit_wrap #(
 
   output logic [1:0] err_irq_o,
 
-  input  reg_req_t reg_req_i,
-  output reg_rsp_t reg_rsp_o
+  input  apb_req_t apb_req_i,
+  output apb_rsp_t apb_rsp_o
 );
 
   logic [2**IdWidth-1:0] write_req_hs_valid, write_rsp_hs_valid, read_req_hs_valid, read_rsp_hs_valid, amo_r_req_hs_valid;
   logic [UserErrBits+2-1:0] write_err, read_err;
-  reg_req_t [1:0] reg_req_internal;
-  reg_rsp_t [1:0] reg_rsp_internal;
+  apb_req_t [1:0] apb_req_internal;
+  apb_rsp_t [1:0] apb_rsp_internal;
 
   for (genvar i = 0; i < 2**IdWidth; i++) begin
     assign write_req_hs_valid[i] = axi_req_i.aw_valid & axi_rsp_i.aw_ready & (axi_req_i.aw.id == i);
@@ -53,18 +53,16 @@ module axi_err_unit_wrap #(
     assign read_err[UserErrBits+2-1:2] = axi_rsp_i.r.user[UserErrBits+UserErrBitsOffset-1:UserErrBitsOffset];
   end
 
-  reg_demux #(
-    .NoPorts    ( 2 ),
-    .req_t      ( reg_req_t ),
-    .rsp_t      ( reg_rsp_t )
-  ) i_reg_demux (
-    .clk_i,
-    .rst_ni,
-    .in_select_i(reg_req_i.addr[5]),
-    .in_req_i   (reg_req_i),
-    .in_rsp_o   (reg_rsp_o),
-    .out_req_o  (reg_req_internal),
-    .out_rsp_i  (reg_rsp_internal)
+  apb_demux #(
+    .NoMstPorts ( 2 ),
+    .req_t      ( apb_req_t ),
+    .resp_t     ( apb_rsp_t )
+  ) i_apb_demux (
+    .select_i   (apb_req_i.addr[5]),
+    .slv_req_i  (apb_req_i),
+    .slv_resp_o (apb_rsp_o),
+    .mst_req_o  (apb_req_internal),
+    .mst_resp_i (apb_rsp_internal)
   );
 
   bus_err_unit #(
@@ -76,8 +74,8 @@ module axi_err_unit_wrap #(
     .NumReqPorts    (1),
     .NumChannels    (2**IdWidth),
     .DropOldest     (DropOldest),
-    .reg_req_t      (reg_req_t),
-    .reg_rsp_t      (reg_rsp_t)
+    .apb_req_t      (apb_req_t),
+    .apb_rsp_t      (apb_rsp_t)
   ) i_write_err_unit (
     .clk_i,
     .rst_ni,
@@ -92,8 +90,8 @@ module axi_err_unit_wrap #(
 
     .err_irq_o        ( err_irq_o[0]       ),
 
-    .reg_req_i        (reg_req_internal[0]),
-    .reg_rsp_o        (reg_rsp_internal[0])
+    .apb_req_i        (apb_req_internal[0]),
+    .apb_rsp_o        (apb_rsp_internal[0])
   );
 
   bus_err_unit #(
@@ -105,8 +103,8 @@ module axi_err_unit_wrap #(
     .NumReqPorts    (2),
     .NumChannels    (2**IdWidth),
     .DropOldest     (DropOldest),
-    .reg_req_t      (reg_req_t),
-    .reg_rsp_t      (reg_rsp_t)
+    .apb_req_t      (apb_req_t),
+    .apb_rsp_t      (apb_rsp_t)
 
   ) i_read_err_unit (
     .clk_i,
@@ -122,8 +120,8 @@ module axi_err_unit_wrap #(
 
     .err_irq_o        ( err_irq_o[1] ),
 
-    .reg_req_i        (reg_req_internal[1]),
-    .reg_rsp_o        (reg_rsp_internal[1])
+    .apb_req_i        (apb_req_internal[1]),
+    .apb_rsp_o        (apb_rsp_internal[1])
 
   );
 

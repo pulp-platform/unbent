@@ -1,0 +1,55 @@
+// Copyright 2025 ETH Zurich and University of Bologna.
+// Solderpad Hardware License, Version 0.51, see LICENSE for details.
+// SPDX-License-Identifier: SHL-0.51
+
+// Author: Michael Rogenmoser <michaero@iis.ee.ethz.ch>
+
+`ifndef BUS_ERR_UNIT_RDL
+`define BUS_ERR_UNIT_RDL
+
+addrmap bus_err_unit {
+
+    reg err_addr {
+        field {
+            name = "err_addr";
+            desc = "Address of the bus error";
+            sw   = r;
+            hw   = w;
+        } err_addr[31:0] = 0x0;
+    };
+
+    reg err_addr_top {
+        field {
+            name = "err_addr_top";
+            desc = "Top of the address of the bus error";
+            sw   = r;
+            hw   = w;
+        } err_addr_top[31:0] = 0x0;
+    };
+
+    reg err_code {
+        field {
+            name = "err_code";
+            desc = "Type of the bus error";
+            sw   = r;
+            hw   = rw;
+            // TODO: hwre
+        } err_code[31:0] = 0x0;
+    };
+
+    reg meta {
+        field {
+            name = "meta";
+            desc = "Meta information of the bus error";
+            sw   = r;
+            hw   = rw;
+        } meta[31:0] = 0x0;
+    };
+
+    external err_addr err_addr;
+    external err_addr_top err_addr_top;
+    external err_code err_code;
+    external meta meta;
+};
+
+`endif // BUS_ERR_UNIT_RDL

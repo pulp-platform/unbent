@@ -12,8 +12,8 @@ module obi_err_unit_wrap #(
   parameter int unsigned NumOutstanding  = 2,
   parameter int unsigned NumStoredErrors = 1,
   parameter bit          DropOldest      = 1'b0,
-  parameter type         reg_req_t       = logic,
-  parameter type         reg_rsp_t       = logic
+  parameter type         apb_req_t       = logic,
+  parameter type         apb_rsp_t       = logic
 ) (
   input  logic                 clk_i,
   input  logic                 rst_ni,
@@ -28,8 +28,8 @@ module obi_err_unit_wrap #(
 
   output logic                 err_irq_o,
 
-  input  reg_req_t             reg_req_i,
-  output reg_rsp_t             reg_rsp_o
+  input  apb_req_t             apb_req_i,
+  output apb_rsp_t             apb_rsp_o
 );
 
   bus_err_unit #(
@@ -40,8 +40,8 @@ module obi_err_unit_wrap #(
     .NumStoredErrors(NumStoredErrors),
     .NumChannels    (1),
     .DropOldest     (DropOldest),
-    .reg_req_t      (reg_req_t),
-    .reg_rsp_t      (reg_rsp_t)
+    .apb_req_t      (apb_req_t),
+    .apb_rsp_t      (apb_rsp_t)
   ) i_err_unit (
     .clk_i,
     .rst_ni,
@@ -56,8 +56,8 @@ module obi_err_unit_wrap #(
 
     .err_irq_o,
 
-    .reg_req_i,
-    .reg_rsp_o
+    .apb_req_i,
+    .apb_rsp_o
   );
 
 endmodule
