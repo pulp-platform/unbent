@@ -53,6 +53,7 @@ module bus_err_unit_bare #(
   err_addr_t read_err_addr;
   logic bus_unit_full;
   logic err_fifo_empty;
+  logic err_fifo_overflow_d, err_fifo_overflow_q;
 
   assign err_irq_o = ~err_fifo_empty;
 
@@ -119,15 +120,35 @@ module bus_err_unit_bare #(
     .bin   (chan_select)
   );
 
+  logic bus_err;
   logic push_err_fifo, pop_err_fifo;
   err_addr_t fifo_data;
 
-  assign push_err_fifo = (|rsp_hs_valid_i) & (DropOldest | ~bus_unit_full) & (|rsp_err_i);
+  assign bus_err = (|rsp_hs_valid_i) & (|rsp_err_i);
+  assign push_err_fifo = bus_err & (DropOldest | ~bus_unit_full);
   assign pop_err_fifo  = (err_fifo_pop_i & ~err_fifo_empty) | (DropOldest & bus_unit_full);
 
   assign fifo_data = '{err:  rsp_err_i,
                        addr: addr_fifo_dead[chan_select] ? '0 : err_addr[chan_select],
                        meta: addr_fifo_dead[chan_select] ? '0 : err_meta[chan_select]};
+
+  always_ff @(posedge clk_i or negedge rst_ni) begin : proc_err_fifo_overflow_ff
+    if(~rst_ni) begin
+      err_fifo_overflow_q <= '0;
+    end else begin
+      err_fifo_overflow_q <= err_fifo_overflow_d;
+    end
+  end
+
+  always_comb begin : proc_err_fifo_overflow
+    err_fifo_overflow_d = err_fifo_overflow_q;
+    if (pop_err_fifo) begin
+      err_fifo_overflow_d = 1'b0;
+    end
+    if (bus_err & bus_unit_full) begin
+      err_fifo_overflow_d = 1'b1;
+    end
+  end
 
   fifo_v3 #(
     .FALL_THROUGH ( 1'b0            ),
@@ -151,6 +172,6 @@ module bus_err_unit_bare #(
   assign err_addr_o = err_fifo_empty ? '0 : read_err_addr.addr;
   assign err_meta_o = err_fifo_empty ? '0 : read_err_addr.meta;
 
-  assign err_fifo_overflow_o = bus_unit_full;
+  assign err_fifo_overflow_o = err_fifo_overflow_q;
 
 endmodule
