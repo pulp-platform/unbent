@@ -1,0 +1,17 @@
+// Copyright 2025 ETH Zurich and University of Bologna.
+// Solderpad Hardware License, Version 0.51, see LICENSE for details.
+// SPDX-License-Identifier: SHL-0.51
+
+// Author: Michael Rogenmoser <michaero@iis.ee.ethz.ch>
+
+`ifndef AXI_BUS_ERR_UNIT_RDL
+`define AXI_BUS_ERR_UNIT_RDL
+
+`include "bus_err_unit.rdl"
+
+addrmap axi_bus_err_unit {
+    bus_err_unit write_err_unit @0x0;
+    bus_err_unit read_err_unit  @0x20;
+};
+
+`endif // AXI_BUS_ERR_UNIT_RDL
