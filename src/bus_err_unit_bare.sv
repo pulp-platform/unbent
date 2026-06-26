@@ -57,18 +57,18 @@ module bus_err_unit_bare #(
   for (genvar i = 0; i < NumChannels; i++) begin : gen_addr_fifo
     logic addr_fifo_full;
     logic addr_fifo_push;
-    logic [NumReqPorts-1:0]                         req_port_onehot;
-    logic [cf_math_pkg::idx_width(NumReqPorts)-1:0] req_port_idx;
+    logic [NumReqPorts-1:0]                    req_port_onehot;
+    logic [cc_pkg::idx_width(NumReqPorts)-1:0] req_port_idx;
 
     for (genvar j = 0; j < NumReqPorts; j++) begin : gen_req_port_onehot
       assign req_port_onehot[j] = req_hs_valid_i[j][i];
     end
 
-    onehot_to_bin #(
-      .ONEHOT_WIDTH(NumReqPorts)
+    cc_onehot_to_bin #(
+      .OnehotWidth(NumReqPorts)
     ) i_req_port_select (
-      .onehot(req_port_onehot),
-      .bin   (req_port_idx)
+      .onehot_i(req_port_onehot),
+      .bin_o   (req_port_idx)
     );
 
     assign addr_fifo_push = |req_port_onehot & ~addr_fifo_full & ~addr_fifo_dead[i];
@@ -87,15 +87,14 @@ module bus_err_unit_bare #(
       end
     end
 
-    fifo_v3 #(
-      .FALL_THROUGH ( 1'b0                    ),
-      .DATA_WIDTH   ( AddrWidth+MetaDataWidth ),
-      .DEPTH        ( NumOutstanding          )
+    cc_fifo #(
+      .FallThrough ( 1'b0                    ),
+      .DataWidth   ( AddrWidth+MetaDataWidth ),
+      .Depth        ( NumOutstanding          )
     ) i_addr_fifo (
       .clk_i,
       .rst_ni,
       .flush_i   (1'b0),
-      .testmode_i(testmode_i),
       .full_o    (addr_fifo_full),
       .empty_o   (),
       .usage_o   (),
@@ -106,13 +105,13 @@ module bus_err_unit_bare #(
     );
   end
 
-  logic [cf_math_pkg::idx_width(NumChannels)-1:0] chan_select;
+  logic [cc_pkg::idx_width(NumChannels)-1:0] chan_select;
 
-  onehot_to_bin #(
-    .ONEHOT_WIDTH(NumChannels)
+  cc_onehot_to_bin #(
+    .OnehotWidth(NumChannels)
   ) i_rsp_chan_select (
-    .onehot(rsp_hs_valid_i),
-    .bin   (chan_select)
+    .onehot_i(rsp_hs_valid_i),
+    .bin_o   (chan_select)
   );
 
   logic push_err_fifo, pop_err_fifo;
@@ -125,15 +124,14 @@ module bus_err_unit_bare #(
                        addr: addr_fifo_dead[chan_select] ? '0 : err_addr[chan_select],
                        meta: addr_fifo_dead[chan_select] ? '0 : err_meta[chan_select]};
 
-  fifo_v3 #(
-    .FALL_THROUGH ( 1'b0            ),
-    .dtype        ( err_addr_t      ),
-    .DEPTH        ( NumStoredErrors )
+  cc_fifo #(
+    .FallThrough ( 1'b0            ),
+    .data_t        ( err_addr_t      ),
+    .Depth        ( NumStoredErrors )
   ) i_err_fifo (
     .clk_i,
     .rst_ni,
     .flush_i   ( 1'b0           ),
-    .testmode_i( testmode_i     ),
     .full_o    ( bus_unit_full  ),
     .empty_o   ( err_fifo_empty ),
     .usage_o   (),
