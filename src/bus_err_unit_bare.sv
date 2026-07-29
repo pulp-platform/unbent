@@ -94,6 +94,7 @@ module bus_err_unit_bare #(
     ) i_addr_fifo (
       .clk_i,
       .rst_ni,
+      .clr_i     (1'b0),
       .flush_i   (1'b0),
       .full_o    (addr_fifo_full),
       .empty_o   (),
@@ -131,6 +132,7 @@ module bus_err_unit_bare #(
   ) i_err_fifo (
     .clk_i,
     .rst_ni,
+    .clr_i     ( 1'b0           ),
     .flush_i   ( 1'b0           ),
     .full_o    ( bus_unit_full  ),
     .empty_o   ( err_fifo_empty ),
